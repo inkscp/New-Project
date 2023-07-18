@@ -9,26 +9,78 @@ import requests
 import os
 from flask import Flask
 from multiprocessing import Process  # симулировали каждый вызов ф-ции отдельным процессом, параллельным.так можно ф-ции(приложения) запускать параллельно.минус - нагрузка на операционку
+import threading
 
-def print_func(continent='Asia'):
-    print(f'Это - {continent}.')
+def print_name(prefix):
+    print(f'Ищем префикс {prefix}')
+    try:
+        while True:
+            name = (yield)
+            if prefix in name:
+                print(name)
+    except GeneratorExit:
+        print('Корутина (coroutine) завершена')
+
+corou = print_name('Уважаемый')
+corou.__next__()
+corou.send('товарищ')
+corou.send('Уважаемый товарищ')
+corou.close()
 
 
-# print_func()
-if __name__ == '__main__':
-    names = ['America', 'Europe', 'Africa']  # подаем ф-ции аргументы
-    procs = []
-    proc = Process(target=print_func)  # вызываем в кач-ве объекта, поэтому скобки не нужны
-    procs.append(proc)
-    proc.start()
 
-    for name in names:  # в цикле перебираем имена
-        proc = Process(target=print_func, args=(name,))
-        procs.append(proc)
-        proc.start()
 
-    for proc in procs:
-        proc.join()
+# def print_cube(num):
+#     """
+#     Вычисляет куб от заданного числа num (комментарий к методу по PEP8)
+#     """
+#
+#     print(f'Куб {num} -> {num * num * num}')
+#
+#
+# def print_square(num):
+#
+#  """
+# Вычисляет квадрат от заданного числа num
+#  """
+#
+# print(f'Квадрат {num} -> {num ** 2}')
+#
+# if __name__ == '__main__':
+#     # создаем 2 потока
+#     thread1 = threading.Thread(target=print_square, args=(10,))
+#     thread2 = threading.Thread(target=print_cube, args=(10,))
+#
+#     thread1.start()  # запуск первого потока
+#     thread2.start()   # запуск второго потока
+#
+#     thread1.join()  #ожидание пока поток1 завершится
+#     thread2.join()  # ожидание пока поток2 завершится
+#
+#     print('Процессы завершены')
+
+
+
+
+# def print_func(continent='Asia'):
+#     print(f'Это - {continent}.')
+#
+#
+# # print_func()
+# if __name__ == '__main__':
+#     names = ['America', 'Europe', 'Africa']  # подаем ф-ции аргументы
+#     procs = []
+#     proc = Process(target=print_func)  # вызываем в кач-ве объекта, поэтому скобки не нужны
+#     procs.append(proc)
+#     proc.start()
+#
+#     for name in names:  # в цикле перебираем имена
+#         proc = Process(target=print_func, args=(name,))
+#         procs.append(proc)
+#         proc.start()
+#
+#     for proc in procs:
+#         proc.join()   # процессы в связке
 
 
 
