@@ -8,18 +8,40 @@ import requests
 # ngrok config add-authtoken 2Sjy0F689bedqNileftPv0MrN2C_by1QTJdKWbf6R1qiSuyc - скачиваем на компьютер. открываем зип и в той же папке сделать 2 текстовых файла с расширением bat
 import os
 from flask import Flask
+from multiprocessing import Process  # симулировали каждый вызов ф-ции отдельным процессом, параллельным.так можно ф-ции(приложения) запускать параллельно.минус - нагрузка на операционку
+
+def print_func(continent='Asia'):
+    print(f'Это - {continent}.')
 
 
-app = Flask(__name__)
-
-@app.route('/')
-def index():
-    return 'Flask приветствует Вас'
-
+# print_func()
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))  # прописываем эти 2 строки. чтобы создать ссылку на свой сайт, создать 2 файла с расширением bat, запустить оба, в одном из них будет ссылка  https://3efc-5-17-85-133.ngrok-free.app
-    app.run(host='0.0.0.0', port=port)
-# HEROKU - раньше был бесплатный хостинг
+    names = ['America', 'Europe', 'Africa']  # подаем ф-ции аргументы
+    procs = []
+    proc = Process(target=print_func)  # вызываем в кач-ве объекта, поэтому скобки не нужны
+    procs.append(proc)
+    proc.start()
+
+    for name in names:  # в цикле перебираем имена
+        proc = Process(target=print_func, args=(name,))
+        procs.append(proc)
+        proc.start()
+
+    for proc in procs:
+        proc.join()
+
+
+
+# app = Flask(__name__)
+#
+# @app.route('/')
+# def index():
+#     return 'Flask приветствует Вас'
+#
+# if __name__ == '__main__':
+#     port = int(os.environ.get('PORT', 5000))  # прописываем эти 2 строки. чтобы создать ссылку на свой сайт, создать 2 файла с расширением bat, запустить оба, в одном из них будет ссылка  https://3efc-5-17-85-133.ngrok-free.app
+#     app.run(host='0.0.0.0', port=port)
+# # HEROKU - раньше был бесплатный хостинг
 
 
 
