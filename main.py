@@ -1,4 +1,4 @@
-
+import asyncio
 from tkinter import Tk, Button
 from PIL import ImageTk, Image
 from bs4 import BeautifulSoup
@@ -8,20 +8,119 @@ import requests
 # ngrok config add-authtoken 2Sjy0F689bedqNileftPv0MrN2C_by1QTJdKWbf6R1qiSuyc - скачиваем на компьютер. открываем зип и в той же папке сделать 2 текстовых файла с расширением bat
 import os
 from flask import Flask
-from multiprocessing import Process  # симулировали каждый вызов ф-ции отдельным процессом, параллельным.так можно ф-ции(приложения) запускать параллельно.минус - нагрузка на операционку
+from multiprocessing import \
+    Process  # симулировали каждый вызов ф-ции отдельным процессом, параллельным.так можно ф-ции(приложения) запускать параллельно.минус - нагрузка на операционку
 import threading
+import telebot
+from telebot import types  # для указания типов
+import config
 
-"""
-Asyncio - модуль асинхронного программирования, который был представлен в Питон. Все карутины содержат точки и ты переключаемся между ними
-"""
-import signal, sys, json, asyncio, aiohttp
-from lib import count_word_at_url
-from redis import Redis  # для организации очереди. он считает кол-во слов на сайте
-from rg import Queue
+# /start
 
-q = Queue(connection=Redis())
-job = q.enqueue(count_word_at_url, 'https://quotes.toscrape.com')
+# инициировали бота
+bot = telebot.TeleBot(config.bot_token)
 
+
+@bot.message_handler(commands=['start'])  # реагируем на '/start'
+def start(message):
+    # создаем кнопку-ссылку. 0.first_name - то, как ты зарегистрированы в телеге
+    markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+    btn1 = types.KeyboardButton('Поздороваться')
+    btn2 = types.KeyboardButton('Задать вопрос')
+    markup.add(btn1, btn2)  # добавляем в контейнер кнопки, так мы их регистрируем
+    bot.send_message(message.chat.id, text='Привет, {0.first_name}! '
+                                           'Я бот, приятно познакомиться)'.format(message.from_user),
+                     reply_markup=markup)  # это я
+
+@bot.message_handler(content_types=['text'])
+def func(message):
+    if message.text == "Поздороваться":
+        bot.send_message(message.chat.id, text='Привет. Спасибо. что зашел!')
+    elif message.text == "Задать вопрос":
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        btn1 = types.KeyboardButton('Как меня зовут?')
+        btn2 = types.KeyboardButton('Что я умею?')
+        back = types.KeyboardButton('Назад в главное меню')
+        markup.add(btn1, btn2, back)
+        bot.send_message(message.chat.id, text='Задайте мне вопрос', reply_markup=markup)
+    elif message.text == 'Как меня зовут?':
+        bot.send_message(message.chat.id, text='Я всего лишь бот')
+    elif message.text == 'Что я умею?':
+        bot.send_message(message.chat.id, text='Здороваться')
+    elif message.text == 'Назад в главное меню':
+        markup = types.ReplyKeyboardMarkup(resize_keyboard=True)
+        button1 = types.KeyboardButton('Поздороваться')
+        button2 = types.KeyboardButton('Задать вопрос')
+        markup.add(button1, button2)
+        bot.send_message(message.chat.id, text='Вы вернулись в главное меню', reply_markup=markup)
+    else:
+        bot.send_message(message.chat.id, text='Я не знаю такой команды')
+
+# запустили бота
+bot.polling(non_stop=True)  # будет работать пока мы его не остановим
+
+# """
+# Asyncio - модуль асинхронного программирования, который был представлен в Питон. Все карутины содержат точки и ты переключаемся между ними
+# """
+# # from lib import count_word_at_url
+# # from redis import Redis  # для организации очереди. он считает кол-во слов на сайте
+# # from rg import Queue
+# import time
+# from datetime import datetime
+#
+# def dish(num, prepare, wait):
+#     """
+#
+#     :param num: номер блюда п\п
+#     :param prepare: время на подготовку
+#     :param wait: ожидание готовности
+#     """
+#     print(f'Подготовка к приготовлению блюда {num} - {datetime.now().strftime("%H:%S")} - подготовка к приготовлению блюда {num} - {prepare} мин.')
+#     time.sleep(prepare)
+#     print(f'Начало приготовления блюда {num} - {datetime.now().strftime("%%H:%S")}. Ожидание блюда {num} {wait} мин.')
+#     time.sleep(wait)
+#     print(f'В {datetime.now().strftime("%%H:%S")}. Блюдо {num} готово.')
+#
+#     t0 = time.time() # время начала работы
+#     dish(1, 2, 3)
+#     dish(2, 5, 10)
+#     dish(3, 3, 5)
+#     delta = int(time.time() - t0)  # затраченное время
+#     print(f'0{datetime.now().strftime("%%H:%S")} мы закончили')
+#     print(f'Затраченное время {delta}')
+
+# асинхронный вариант
+# async def dish(num, prepare, wait):
+#     """
+#     num: номер блюда по порядку
+#     prepare: время на подготовку
+#     wait: ожидание готовности
+#     """
+#     print(f'{datetime.now().strftime("%H:%S")} - подготовка к приготовлению блюда {num} - {prepare} мин.')
+#     time.sleep(prepare)
+#     print(f'Начало приготовления блюда {num} - {datetime.now().strftime("%H:%S")}. Ожидание блюда {num} {wait} мин.')
+#     await asyncio.sleep(wait)
+#     print(f'В {datetime.now().strftime("%H:%S")}. блюдо {num} готово.')
+#
+# async def main():
+#     tasks = [
+#         asyncio.create_task(dish(1, 2, 3)),
+#         asyncio.create_task(dish(2, 5, 10)),
+#         asyncio.create_task(dish(3, 3, 5))
+#     ]
+#     await asyncio.gather(*tasks)
+#
+# if __name__ == '__main__':
+#     t0 = time.time()  # время начало работы
+#     if os.name == 'nt':
+#         asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
+#     asyncio.run(main())  # запустили асинхронное приготовление
+#     delta = int(time.time() - t0)  # затраченное время
+#     print(f'В {datetime.now().strftime("%H:%S")} мы закончили')
+#     print(f'Затрачено времени - {delta}')
+
+# q = Queue(connection=Redis())
+# job = q.enqueue(count_word_at_url, 'https://quotes.toscrape.com')
 
 
 # loop = asyncio.get_event_loop()  # все будет выполняться независимо и асинхронно
@@ -58,8 +157,6 @@ job = q.enqueue(count_word_at_url, 'https://quotes.toscrape.com')
 #     loop.run_forever()
 
 
-
-
 # def print_name(prefix):
 #     print(f'Ищем префикс {prefix}')
 #     try:
@@ -75,8 +172,6 @@ job = q.enqueue(count_word_at_url, 'https://quotes.toscrape.com')
 # corou.send('товарищ')
 # corou.send('Уважаемый товарищ')
 # corou.close()
-
-
 
 
 # def print_cube(num):
@@ -109,8 +204,6 @@ job = q.enqueue(count_word_at_url, 'https://quotes.toscrape.com')
 #     print('Процессы завершены')
 
 
-
-
 # def print_func(continent='Asia'):
 #     print(f'Это - {continent}.')
 #
@@ -132,7 +225,6 @@ job = q.enqueue(count_word_at_url, 'https://quotes.toscrape.com')
 #         proc.join()   # процессы в связке
 
 
-
 # app = Flask(__name__)
 #
 # @app.route('/')
@@ -143,8 +235,6 @@ job = q.enqueue(count_word_at_url, 'https://quotes.toscrape.com')
 #     port = int(os.environ.get('PORT', 5000))  # прописываем эти 2 строки. чтобы создать ссылку на свой сайт, создать 2 файла с расширением bat, запустить оба, в одном из них будет ссылка  https://3efc-5-17-85-133.ngrok-free.app
 #     app.run(host='0.0.0.0', port=port)
 # # HEROKU - раньше был бесплатный хостинг
-
-
 
 
 # url = 'https://quotes.toscrape.com/'

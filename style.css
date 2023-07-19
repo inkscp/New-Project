@@ -1,3 +1,26 @@
 #text {
     font-size: 24px;
 }
+
+/*стилизуем кнопку "наверх", скрытую*/
+#top-btn {
+    display: none;  /*none/не none будет менять JavaScript*/
+    position: fixed;
+    bottom: 20px;
+    right: 30px;
+    border: none;
+    outline: none;
+    background-color: #F5F5F5;  /*rgb(245, 245, 245, 1) - можно посчитать в режиме программиста в калькуляторе HEX. 4 параметр - прозрачность, optional*/
+    color: black;
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;  /*загруглится*/
+    font-size: 24pt;
+    font-weight: bold;
+    z-index: 99;
+}
+/*поведение при наведении курсора мыши*/
+#top-btn:hover {
+    background-color: #ffc107;
+    color: #dc3355;
+}
